@@ -1,101 +1,172 @@
 import juiz as j
 import time
 
-while True:
+# ideias
+# -s (separador)
+# julge 
+
+operadores = ['folder', 'judge', 'test', 'add', 'del', 'quit', 'q', '-s', '-l', '-o']
+juizo = j.Juiz()
+lista = []    
+
+
+def imprime_menu():
     print()
     print("############ INFORME UM COMANDO ############")
-    print("Pastifica: cria a pasta do aluno com seu codigo")
-    print("Julga: compara as saidas do cod_student com o Output")
-    print("Testifica: gera testes a partir de arquivo txt (ex.:Input.txt)")
-    print("Del [...]: Apaga casos de testes indesejados. Aceita varios argumentos.")
-    print("Add [...]: Adiciona casos de testes indesejados. Aceita varios argumentos.")
-    print("Sair: Fecha programa")
+    print("folder: cria a pasta do aluno com seu codigo")
+    print("judge: compara as saidas do cod_student com o Output")
+    print("test: gera testes a partir de arquivo txt (ex.:Input.txt)")
+    print("del [...]: Apaga casos de testes indesejados. Aceita varios argumentos.")
+    print("add [...]: Adiciona casos de testes desejados. Digite add . para adicionar todos.")
+    print("quit(q): Fecha programa")
     print()
 
-    lista = input().lower()
+
+def valida_operador_int(flag : str):
+    idx = lista.index(flag) + 1
+
+    try:
+        valor = int(lista[idx])
+
+        if (valor in operadores):
+            print("Uso de flag invalida")
+
+        return valor
+
+    except ValueError:
+        print(f"Para a flag {flag}, é nessário fornecer um número")
+    except IndexError:
+        print("Falta argumentos para a flag")
+
+    return None
+
+def analisa_operacao() -> tuple[str, int]: 
+
+    """
+    Returns:
+        tuple[str, int]: retornado
+            - (str) : Separador.
+            - (int) : lucky.
+    """
+
+    global lista
+
+    separador = "NULL"
+    lucky = 1
+    oculto = 0
+
+    if ('-s' in lista): #separador
+        idx_separador = lista.index('-s') + 1
+
+        try:
+            separador = lista[idx_separador]
+
+            if (separador in operadores):
+                print("Uso de flag invalida")
+
+        except IndexError:
+            print("Falta argumentos para a flag")
+
+    if ('-l' in lista): #lucky
+        val = valida_operador_int('-l') 
+        lucky = val if val is not None else lucky
+
+    elif ('-o' in lista): #oculto
+        val = valida_operador_int('-o') 
+        oculto = val if val is not None else oculto
+
+    juizo.set_lucky(lucky)
+    juizo.set_separador(separador)
+    juizo.set_oculto(oculto)
+
+def get_operator() -> bool:
+    global lista
+    lista = input()
     lista = lista.split()
-    operador = lista[0]
 
-    if operador == 'pastifica':
-        if (len(lista) > 1):  #verifica se existe algum argumento para o pastifica (default: seperador NULL, sorted false, max_limite 1)
-            separador = "NULL"
-            sorted = "sorted"
+    if (len(lista) > 0):
+        if (not lista[0].lower() in operadores):
+            print("Operador Invalido!")
+            return False    
+        
+        return True
 
-            if sorted in lista: #pastifica, tlv sorted (len ja eh maior que 1)
-                indice_do_sorted = lista.index(sorted)
-                
-                if (len(lista) > indice_do_sorted + 1):  #pastifica, sorted, tlv max_limite   ///   #verifica se existe o max_limite do sorted
-                    max_limite = lista[indice_do_sorted + 1]
+    else:
+        print("Falta operador!")
+        return False
 
-                    if (len(lista) > 3): #pastifica, tvl separador, sorted, max_limite
-                        separador = lista[1]
 
-                    j.pastifica(separador, True, max_limite)  #todos os argumentos
+def get_add():
+    global lista
+
+    try: 
+        pasta_desejada = lista[1]
+
+        if (len(lista) >= 3):
+            if (lista[2] == '.'):
+                print('kdk')
+                juizo.adiciona_teste(pasta_desejada)
+
+            else:
+                juizo.adiciona_teste(pasta_desejada, lista[2:])
+        else:
+            print("Falta argumetos para a operacao")
+        
+    except IndexError:
+        print("Provável que falta indicar o diretorio para a que o teste seja adicionado")
+
+
+if __name__ == "__main__":
+
+    while True:
+        imprime_menu()
+
+        if (not get_operator()): #verifica se o primeiro operador é valido
+            continue
+        
+
+        operador = lista[0] #get first element (operador)
+        juizo.update_childrens()
+
+        if operador == 'folder': #organiza tudo, se tiver Input ele gera testes, e se tiver .c ele organiza os codigos
+            analisa_operacao()
+            juizo.pastifica()
+
+        elif operador == 'judge': #julga os alunos
+            juizo.julga()
+
+        elif operador == 'test': #cria uma in/out informando o .txt
+            try:
+                arquivo = lista[1]
+
+                if (not arquivo.endswith('.txt')):
+                    print("Argumento inválido, forneça um arquivo .txt")
 
                 else:
-                    if (len(lista) > 2): #pastifica, tvl separador, sorted
-                        separador = lista[1]
+                    analisa_operacao()
+                    juizo.gera_testes(arquivo)
 
-                    j.pastifica(separador, True) #faltou o max_limite (acaba gerando apenas 1 caso por separador)
-                    
-            else: #pastifica, tlv separador
-                separador = lista[1]
-                j.pastifica(separador)  #gera casos de testes com base no separador fornecido
+            except IndexError:
+                print("Falta argumentos para a flag")
 
-        else:
-            j.pastifica() #Input -> test_1.txt
-
-    elif operador == 'julga':
-        j.julga()
-
-    elif operador == 'testifica':
-        if (len(lista) > 1):  #verifica se existe algum argumento para o testifica (default: seperador NULL, sorted false, max_limite 1)
-            arquivo = lista[1]
-            sorted = "sorted"
-            separador = "NULL"
-
-            if sorted in lista and len(lista) > 2: #testifica, arquivo, tlv sorted...  #TEM SORTED
-                indice_do_sorted = lista.index(sorted)
-                
-                if (len(lista) > indice_do_sorted + 1): #existe valor de max_limite
-                    max_limite = lista[indice_do_sorted + 1]
-
-                    if (len(lista) > 4): #testifica, arquivo, separador, sorted, tvl max_limite...
-                        separador = lista[2]
-
-                    j.randomriza_qtd_testes(max_limite) 
-                    j.gera_testes(arquivo, separador)
-
+        elif operador == 'del': #apaga uma sequencia de testes
+            if (len(lista) >= 2):
+                if (all(arquivo.endswith('.txt') for arquivo in lista[1:])):
+                    juizo.apaga(lista[1:])
                 else:
-                    if (len(lista) > 3):  #testifica, arquivo, separador, sorted
-                        separador = lista[2]
+                    print('Algum dos arquivos não termina em txt')
+            else:
+                print("Falta argumentos para a flag")
 
-                    j.randomriza_qtd_testes()
-                    j.gera_testes(arquivo, separador) #faltou o max_limite (acaba gerando apenas 1 caso por separador)
-                    
+        elif operador == 'add': #adiciona um unico teste
+            analisa_operacao()
+            get_add()
 
-            else: #NAO TEM SORTED
-                if (len(lista) > 2): #testifica, arquivo, tlv separador
-                    separador = lista[2]
+        elif operador == 'quit' or operador.lower() == 'q':
+            break
 
-                j.gera_testes(arquivo, separador)  #gera casos de testes com base no separador fornecido
+        time.sleep(1)
 
-        else:
-            j.gera_testes(arquivo) #Input -> test_1.txt
-
-
-    elif operador == 'del':
-        j.apaga(lista)
-
-    elif operador == 'add':
-        j.adiciona_teste(lista[1], lista[2:])
-
-    elif operador == 'sair':
-        break
-
-    time.sleep(1)
-
-print("MUITO OBRIGADO!")
-
+    print("copyright © 2026 Bernardo - git hub : BartSOS")
 
 # trazer sugestão de data para os eventos do dia pet para the next reuniao (POR MIM QUALQUER UM)

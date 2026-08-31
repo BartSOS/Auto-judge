@@ -1,12 +1,13 @@
-import juiz as j
+import explorer
 import time
+import pandas
 
 # ideias
 # -s (separador)
 # julge 
 
 operadores = ['folder', 'judge', 'test', 'add', 'del', 'quit', 'q', '-s', '-l', '-o']
-juizo = j.Juiz()
+juizo = explorer.Explorer()
 lista = []    
 
 
@@ -21,8 +22,24 @@ def imprime_menu():
     print("quit(q): Fecha programa")
     print()
 
+def valida_operador_str(flag : str) -> str | None:
+    idx = lista.index(flag) + 1
 
-def valida_operador_int(flag : str):
+    try:
+        argumento = lista[idx]
+
+        if (argumento in operadores):
+            print("Uso de flag invalida")
+            return None
+
+        return argumento
+
+    except IndexError:
+        print("Falta argumentos para a flag")
+
+    return None
+
+def valida_operador_int(flag : str) -> int | None:
     idx = lista.index(flag) + 1
 
     try:
@@ -30,6 +47,7 @@ def valida_operador_int(flag : str):
 
         if (valor in operadores):
             print("Uso de flag invalida")
+            return None
 
         return valor
 
@@ -40,8 +58,30 @@ def valida_operador_int(flag : str):
 
     return None
 
-def analisa_operacao() -> tuple[str, int]: 
+def valida_oculto(oculto : str | None) -> tuple[int, int]:
+    if (oculto is not None):
+        if '-' in oculto:
+            limites = oculto.split('-')
+            start, end = limites
+            
+            try:
+                start = int(start)
+                end = int(end)
 
+                st = min(start, end)
+                ed = max(start, end)
+
+                return (st, ed)
+
+            except ValueError:
+                print('Intervalos definidos não são strings')
+                return (0, 0)
+
+        print('Intervalo não definido corretamente')
+        return (0, 0)
+    return (0,0)
+
+def analisa_operacao() -> tuple[str, int]: 
     """
     Returns:
         tuple[str, int]: retornado
@@ -53,27 +93,19 @@ def analisa_operacao() -> tuple[str, int]:
 
     separador = "NULL"
     lucky = 1
-    oculto = 0
+    oculto = (0, 0)
 
     if ('-s' in lista): #separador
-        idx_separador = lista.index('-s') + 1
-
-        try:
-            separador = lista[idx_separador]
-
-            if (separador in operadores):
-                print("Uso de flag invalida")
-
-        except IndexError:
-            print("Falta argumentos para a flag")
+        val = valida_operador_str('-s')
+        separador = val if val is not None else separador
 
     if ('-l' in lista): #lucky
         val = valida_operador_int('-l') 
         lucky = val if val is not None else lucky
 
     elif ('-o' in lista): #oculto
-        val = valida_operador_int('-o') 
-        oculto = val if val is not None else oculto
+        val = valida_operador_str('-o') 
+        oculto = valida_oculto(val)
 
     juizo.set_lucky(lucky)
     juizo.set_separador(separador)

@@ -16,7 +16,7 @@ jobs :
         run : make SCRIPT=main.py
 
       - name : Exporta Executavel
-        uses : actions/upload-artifact@v3
+        uses : actions/upload-artifact@v4
         with :
           name : executavel
           path : executaveis/

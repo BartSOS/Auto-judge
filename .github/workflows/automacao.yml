@@ -1,0 +1,23 @@
+name : Build executaveis de arquivos py
+
+on :
+  push :
+    branches : ["main", "master"]
+
+jobs :
+  build-docker :
+    runs-on : ubuntu-latest
+
+    steps :
+      -name : Clona Repositorio
+      uses : actions/checkout@v4
+
+      -name : Cria Executavel
+      run : make SCRIPT=main.py
+
+      -name : Exporta Executavel
+      uses : actions/upload-artifact@v3
+      with :
+        name : executavel
+        path : executaveis/
+

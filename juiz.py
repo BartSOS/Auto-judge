@@ -22,7 +22,7 @@ class Aluno:
 
     def compilar(self):
         if (self.__codigo_c != "NULL"):
-            comando = ['gcc', '-o', self.__codigo_exe, self.__codigo_c]
+            comando = ['gcc', '-o', self.__codigo_exe, self.__codigo_c, '-lm']
                     
             with open(f'{self.__resultados}/resumo.txt', 'w') as resumo:
                 try:

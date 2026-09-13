@@ -199,6 +199,6 @@ if __name__ == "__main__":
 
         time.sleep(1)
 
-    print("copyright © 2026 Bernardo - git hub : BartSOS")
+    print("2026 Bernardo - git hub : BartSOS")
 
 # trazer sugestão de data para os eventos do dia pet para the next reuniao (POR MIM QUALQUER UM)

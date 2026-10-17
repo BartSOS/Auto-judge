@@ -1,13 +1,10 @@
 import explorer
 import time
-import pandas
+from utils import *
 
-# ideias
-# -s (separador)
-# julge 
-
-operadores = ['folder', 'judge', 'test', 'add', 'del', 'quit', 'q', '-s', '-l', '-o']
-juizo = explorer.Explorer()
+operadores = ['folder', 'judge', 'test', 'add', 'del', 'quit', 'q']
+flags = ['-s', '-l', '-o']
+explore = explorer.Explorer()
 lista = []    
 
 
@@ -19,97 +16,71 @@ def imprime_menu():
     print("test: gera testes a partir de arquivo txt (ex.:Input.txt)")
     print("del [...]: Apaga casos de testes indesejados. Aceita varios argumentos.")
     print("add [...]: Adiciona casos de testes desejados. Digite add . para adicionar todos.")
-    print("quit(q): Fecha programa")
+    print("quit(q): Fecha programaa")
     print()
 
 def valida_operador_str(flag : str) -> str | None:
     idx = lista.index(flag) + 1
 
     try:
-        argumento = lista[idx]
-
-        if (argumento in operadores):
-            print("Uso de flag invalida")
-            return None
-
-        return argumento
+        return lista[idx]
 
     except IndexError:
-        print("Falta argumentos para a flag")
-
-    return None
+        raise ArgumentFlagError(flag = flag)
 
 def valida_operador_int(flag : str) -> int | None:
-    idx = lista.index(flag) + 1
-
     try:
-        valor = int(lista[idx])
+        operador_str = valida_operador_str()
+        operador_int = int(operador_str)
+        return operador_int
+        
+    except ValueError as e:
+        raise ArgumentFlagError(f"O argumento da flag {flag} não é um int")
+    
+def valida_intervalo(flag : str) -> tuple[int, int] | None:
+    try:
+        oculto = valida_operador_str(flag)
 
-        if (valor in operadores):
-            print("Uso de flag invalida")
-            return None
+        if not '-' in oculto:
+            raise IntervalIndefinedError(f'Para definir um intervalo é preciso seperá-lo com um traço -.', tupla_interval=oculto, flag=flag)
 
-        return valor
+        limites = oculto.split('-')
+        limites = [item for item in limites if item != '']
+
+        if len(limites) < 2:
+            raise IntervalIndefinedError('O intervalo deve ter um valor inicial e final', tupla_interval=oculto, flag=flag)
+
+        start, end = limites
+        
+        start = int(start)
+        end = int(end)
+
+        st = min(start, end)
+        ed = max(start, end)
+
+        if (st < 0 or ed < 0):
+            raise IntervalIndefinedError('Os valores do intervalo devem ser positivos', tupla_interval=oculto, flag=flag)
+
+        return (st, ed)
 
     except ValueError:
-        print(f"Para a flag {flag}, é nessário fornecer um número")
-    except IndexError:
-        print("Falta argumentos para a flag")
-
-    return None
-
-def valida_oculto(oculto : str | None) -> tuple[int, int]:
-    if (oculto is not None):
-        if '-' in oculto:
-            limites = oculto.split('-')
-            start, end = limites
-            
-            try:
-                start = int(start)
-                end = int(end)
-
-                st = min(start, end)
-                ed = max(start, end)
-
-                return (st, ed)
-
-            except ValueError:
-                print('Intervalos definidos não são strings')
-                return (0, 0)
-
-        print('Intervalo não definido corretamente')
-        return (0, 0)
-    return (0,0)
+        raise IntervalIndefinedError(f'Intervalos definidos não são inteiros.', tupla_interval=oculto, flag=flag)
 
 def analisa_operacao() -> tuple[str, int]: 
-    """
-    Returns:
-        tuple[str, int]: retornado
-            - (str) : Separador.
-            - (int) : lucky.
-    """
-
     global lista
 
-    separador = "NULL"
-    lucky = 1
-    oculto = (0, 0)
-
     if ('-s' in lista): #separador
-        val = valida_operador_str('-s')
-        separador = val if val is not None else separador
+        separador = valida_operador_str('-s')
+        explore.set_separador(separador)
 
     if ('-l' in lista): #lucky
-        val = valida_operador_int('-l') 
-        lucky = val if val is not None else lucky
+        lucky = valida_intervalo('-l')
+        explore.set_lucky(lucky)
 
-    elif ('-o' in lista): #oculto
-        val = valida_operador_str('-o') 
-        oculto = valida_oculto(val)
+    if ('-o' in lista): #oculto
+        oculto = valida_intervalo('-o')
+        explore.set_oculto(oculto)
 
-    juizo.set_lucky(lucky)
-    juizo.set_separador(separador)
-    juizo.set_oculto(oculto)
 
 def get_operator() -> bool:
     global lista
@@ -117,14 +88,16 @@ def get_operator() -> bool:
     lista = lista.split()
 
     if (len(lista) > 0):
-        if (not lista[0].lower() in operadores):
-            print("Operador Invalido!")
+        lista[0] = lista[0].lower()
+
+        if (not lista[0] in operadores):
+            print("Comando Invalido!")
             return False    
         
         return True
 
     else:
-        print("Falta operador!")
+        print("É necessário fornecer um comando")
         return False
 
 
@@ -137,10 +110,10 @@ def get_add():
         if (len(lista) >= 3):
             if (lista[2] == '.'):
                 print('kdk')
-                juizo.adiciona_teste(pasta_desejada)
+                explore.adiciona_teste(pasta_desejada)
 
             else:
-                juizo.adiciona_teste(pasta_desejada, lista[2:])
+                explore.adiciona_teste(pasta_desejada, lista[2:])
         else:
             print("Falta argumetos para a operacao")
         
@@ -155,49 +128,56 @@ if __name__ == "__main__":
 
         if (not get_operator()): #verifica se o primeiro operador é valido
             continue
-        
 
         operador = lista[0] #get first element (operador)
-        juizo.update_childrens()
+        explore.update_childrens()
 
-        if operador == 'folder': #organiza tudo, se tiver Input ele gera testes, e se tiver .c ele organiza os codigos
-            analisa_operacao()
-            juizo.pastifica()
+        try:
+            if operador == 'folder': #organiza tudo, se tiver Input ele gera testes, e se tiver .c ele organiza os codigos
+                analisa_operacao()
+                explore.pastifica()
 
-        elif operador == 'judge': #julga os alunos
-            juizo.julga()
+            elif operador == 'judge': #julga os alunos
+                explore.julga()
 
-        elif operador == 'test': #cria uma in/out informando o .txt
-            try:
-                arquivo = lista[1]
+            elif operador == 'test': #cria uma in/out informando o .txt
+                try:
+                    arquivo = lista[1]
 
-                if (not arquivo.endswith('.txt')):
-                    print("Argumento inválido, forneça um arquivo .txt")
+                    if (not arquivo.endswith('.txt')):
+                        print("Argumento inválido, forneça um arquivo .txt")
 
+                    else:
+                        analisa_operacao()
+                        explore.gera_testes(arquivo)
+
+                except IndexError:
+                    print("Falta argumentos para a flag")
+
+            elif operador == 'del': #apaga uma sequencia de testes
+                if (len(lista) >= 2):
+                    if (all(arquivo.endswith('.txt') for arquivo in lista[1:])):
+                        explore.apaga(lista[1:])
+                    else:
+                        print('Algum dos arquivos não termina em txt')
                 else:
-                    analisa_operacao()
-                    juizo.gera_testes(arquivo)
+                    print("Falta argumentos para a flag")
 
-            except IndexError:
-                print("Falta argumentos para a flag")
+            elif operador == 'add': #adiciona um unico teste
+                analisa_operacao()
+                get_add()
 
-        elif operador == 'del': #apaga uma sequencia de testes
-            if (len(lista) >= 2):
-                if (all(arquivo.endswith('.txt') for arquivo in lista[1:])):
-                    juizo.apaga(lista[1:])
-                else:
-                    print('Algum dos arquivos não termina em txt')
-            else:
-                print("Falta argumentos para a flag")
+            elif operador == 'quit' or operador.lower() == 'q':
+                break
 
-        elif operador == 'add': #adiciona um unico teste
-            analisa_operacao()
-            get_add()
+            time.sleep(1)
 
-        elif operador == 'quit' or operador.lower() == 'q':
-            break
+        except IntervalIndefinedError as e:
+            print(f"Erro: {e}")
 
-        time.sleep(1)
+        except ArgumentFlagError as e:
+            print(f"Erro: {e}")
+
 
     print("2026 Bernardo - git hub : BartSOS")
 

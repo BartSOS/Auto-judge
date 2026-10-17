@@ -1,6 +1,45 @@
+# Pastas geradas pelo projeto e ambiente de desenvolvimento
 Gabaritos/
-Developer/
-*.git
 Alunos/
-__*/
-.txt
+Developer/
+executaveis/
+
+# Arquivos de entrada/teste e códigos C soltos na raiz
+*.txt
+!requirements.txt
+*.c
+
+# Binários e compilados (C / Windows / Linux)
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.so
+*.dll
+
+# Python cache e ambientes virtuais
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# PyInstaller / Build
+build/
+dist/
+*.spec
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db

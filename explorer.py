@@ -99,13 +99,13 @@ class Explorer:
         return testes
 
 
-    def gera_testes(self, file_src : str):
-        if not os.path.exists(file_src): #so eh pra gerar testes se o arquivo de In_Out.txt existir
+    def gera_testes(self, file_src : str, file_name_original : str):
+        if not os.path.exists(file_name_original): #so eh pra gerar testes se o arquivo de In_Out.txt existir
             raise FileNotFoundError(f"Arquivo {file_src} não encontrado")
-        
-        in_out = file_src.strip('.txt') #pega só o nome
+
+        in_out = file_src #pega o nome
         diretorio = os.path.join(self.__gabaritos, in_out)  #cria pasta de Input or Output
-        create_if_not_exist(diretorio)
+        create_new_path(diretorio)
 
         ocultos = []
         diretorio_casos_ocultos = os.path.join(diretorio, FOLDER_CASOS_OCULTOS)  #cria if precisar a pasta ocultos
@@ -114,7 +114,7 @@ class Explorer:
             testes = self.le_txt_e_gera_casos_de_teste(arq)
 
             if (self.__ocultos != (0,0)):
-                create_if_not_exist(diretorio_casos_ocultos)
+                create_new_path(diretorio_casos_ocultos)
                 start, end = self.__ocultos
                 ocultos = testes[start - 1 : end]
                 del testes[start - 1 : end]
@@ -143,14 +143,17 @@ class Explorer:
 
     def pastifica(self):
         for arquivos in self.__diretorio_atual:
-            if arquivos.endswith('.txt'): #arquivos para gerar testes (ex.: Input, Output)
-                self.gera_testes(arquivos)
+            file_src, extension = os.path.splitext(arquivos)
 
-            elif arquivos.endswith('.c'): #codigos dos alunos
-                caminho_do_c = os.path.join(self.__faluno, arquivos.strip('.c'))
-                if not os.path.exists(caminho_do_c):
-                    os.mkdir(caminho_do_c)
-                    shutil.move(arquivos, caminho_do_c)  
+            if extension:
+                if extension == '.txt': #arquivos para gerar testes (ex.: Input, Output)
+                    self.gera_testes(file_src, arquivos)
+
+                elif extension == '.c': #codigos dos alunos
+                    caminho_do_c = os.path.join(self.__faluno, file_src)
+                    if not os.path.exists(caminho_do_c):
+                        os.mkdir(caminho_do_c)
+                        shutil.move(arquivos, caminho_do_c)  
 
     def organiza_testes(self, in_out : str): #organiza os testes em ordem, caso estejam não tenha um deles (test_1, test_2, test_4) -> (test_1, test_2, test_3)
         casos = gera_caminho(in_out)

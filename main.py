@@ -7,7 +7,6 @@ flags = ['-s', '-l', '-o']
 explore = explorer.Explorer()
 lista = []    
 
-
 def imprime_menu():
     print()
     print("=" * 72)

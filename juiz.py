@@ -9,7 +9,7 @@ class Aluno:
 
         if (self.__codigo_c != "NULL"):
             self.__resultados = os.path.join(diretorio_do_aluno, self.__fresultados)
-            create_if_not_exist(self.__resultados)
+            create_new_path(self.__resultados)
 
             self.__codigo_exe = os.path.basename(self.__codigo_c[:-2]) + '.exe'
             self.__codigo_exe = os.path.join(self.__resultados, self.__codigo_exe)

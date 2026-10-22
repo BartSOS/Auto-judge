@@ -6,7 +6,7 @@ FOLDER_GABARITOS = "Gabaritos"
 FOLDER_ALUNOS = "Alunos"
 FOLDER_CASOS_OCULTOS = "Casos Ocultos"
 
-def create_if_not_exist(caminho : str):
+def create_new_path(caminho : str):
     if not os.path.exists(caminho):
         os.mkdir(caminho)
 
